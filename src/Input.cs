@@ -1,9 +1,12 @@
+using NET_NES.peripheral.keyboard;
 using Raylib_cs;
 
 public class Input {
     private byte controllerState = 0;
     private byte controllerShift = 0;
 
+    IKeyboard keyboard = new SuborKeyboard();
+    
     public void UpdateController() {
         controllerState = 0;
         if (Raylib.IsKeyDown(KeyboardKey.X)) controllerState |= 1 << 0; // A
@@ -20,11 +23,18 @@ public class Input {
         if ((value & 1) != 0) {
             controllerShift = controllerState;
         }
+        
+        keyboard.Write(value);
     }
 
     public byte Read4016() {
         byte result = (byte)(controllerShift & 1);
         controllerShift >>= 1;
         return result;
+    }
+
+    public byte Read4017()
+    {
+        return keyboard.Read();
     }
 }

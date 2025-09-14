@@ -21,7 +21,10 @@ public class Bus : IBus{
         if (address == 0x4016) {
             return input.Read4016(); //NES controller input
         }
-
+        else if (address == 0x4017) {
+            return input.Read4017(); //NES controller input
+        }
+        
         if (address >= 0x2000 && address <= 0x3FFF) {
             ushort reg = (ushort)(0x2000 + (address & 0x0007));
             byte result = ppu.ReadPPURegister(reg);
