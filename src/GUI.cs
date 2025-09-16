@@ -44,6 +44,9 @@ public class GUI {
     }
 
     public void Run() {
+        // Do not handle ESC internally
+        Raylib.SetExitKey(KeyboardKey.Null);
+        
         while (!Raylib.WindowShouldClose()) {
             Raylib.SetWindowSize(256 * Helper.scale, 240 * Helper.scale);
             Raylib.BeginDrawing();
@@ -62,8 +65,6 @@ public class GUI {
                 Raylib.ClearBackground(Color.DarkGray);
                 Raylib.DrawTextureEx(backgroundTexture, new System.Numerics.Vector2(0, -5), 0, (float)(Helper.scale*0.50), Color.White);
             }
-
-            if (Raylib.IsKeyPressed(KeyboardKey.Space)) Helper.showMenuBar = !Helper.showMenuBar;
             
             if (Helper.fpsEnable) Raylib.DrawFPS(0, Helper.showMenuBar ? 19 : 0);
 
