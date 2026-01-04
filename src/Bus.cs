@@ -3,16 +3,18 @@ public class Bus : IBus{
     public PPU ppu;
     public APU apu;
     public Cartridge cartridge;
+    public Timing timing;
 
     public byte[] ram; //2KB RAM
 
     public Input input = new Input();
 
-    public Bus(Cartridge cartridge) {
+    public Bus(Cartridge cartridge, Timing timing) {
         this.cartridge = cartridge;
+        this.timing = timing;
         cpu = new CPU(this);
         ppu = new PPU(this);
-        apu = new APU(this);
+        apu = new APU(this, timing);
 
         ram = new byte[2048];
 

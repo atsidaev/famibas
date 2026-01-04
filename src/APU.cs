@@ -98,8 +98,7 @@ public class APU {
     private int apuCycleAccumulator; // For tracking APU half-cycles (pulse/noise tick every 2 CPU cycles)
 
     // Audio output
-    private const int SampleRate = 44100;
-    private const int CpuFrequency = 1789773; // NES CPU frequency
+    private Timing timing;
     private int cyclesPerSample;
     private int sampleCounter;
     private int cyclesAccumulated;
@@ -112,13 +111,14 @@ public class APU {
     private float prevOutput = 0;
     private const float HighPassAlpha = 0.995f; // Cutoff ~10Hz at 44100Hz
 
-    public APU(Bus bus) {
+    public APU(Bus bus, Timing timing) {
         this.bus = bus;
+        this.timing = timing;
 
         // Initialize all channels
         Reset();
 
-        cyclesPerSample = CpuFrequency / SampleRate;
+        cyclesPerSample = timing.CpuFrequency / timing.AudioSampleRate;
         sampleCounter = 0;
         cyclesAccumulated = 0;
         sampleBuffer = new List<float>();
@@ -423,45 +423,49 @@ public class APU {
             sampleBuffer.Add(sample);
         }
 
-        // Frame counter - thresholds in CPU cycles (APU cycles * 2)
-        // APU runs at CPU/2, original thresholds were in APU cycles
+        // Frame counter
         int oldCounter = cycleCounter - cycles;
+        int step1 = timing.FrameCounterStep1;
+        int step2 = timing.FrameCounterStep2;
+        int step3 = timing.FrameCounterStep3;
+        int step4 = timing.FrameCounterStep4;
+        int step5 = timing.FrameCounterStep5;
 
         if (!frameCounterMode) {
-            // 4-step mode (CPU cycles: 7458, 14914, 22372, 29830)
-            if (oldCounter < 7458 && cycleCounter >= 7458) {
+            // 4-step mode
+            if (oldCounter < step1 && cycleCounter >= step1) {
                 QuarterFrame();
             }
-            if (oldCounter < 14914 && cycleCounter >= 14914) {
+            if (oldCounter < step2 && cycleCounter >= step2) {
                 QuarterFrame();
             }
-            if (oldCounter < 22372 && cycleCounter >= 22372) {
+            if (oldCounter < step3 && cycleCounter >= step3) {
                 QuarterFrame();
             }
-            if (oldCounter < 29830 && cycleCounter >= 29830) {
+            if (oldCounter < step4 && cycleCounter >= step4) {
                 QuarterFrame();
                 HalfFrame();
-                cycleCounter -= 29830;
+                cycleCounter -= step4;
             }
         } else {
-            // 5-step mode (CPU cycles: 7458, 14914, 22372, 29830, 37282)
-            if (oldCounter < 7458 && cycleCounter >= 7458) {
+            // 5-step mode
+            if (oldCounter < step1 && cycleCounter >= step1) {
                 QuarterFrame();
             }
-            if (oldCounter < 14914 && cycleCounter >= 14914) {
+            if (oldCounter < step2 && cycleCounter >= step2) {
                 QuarterFrame();
             }
-            if (oldCounter < 22372 && cycleCounter >= 22372) {
+            if (oldCounter < step3 && cycleCounter >= step3) {
                 QuarterFrame();
             }
-            if (oldCounter < 29830 && cycleCounter >= 29830) {
+            if (oldCounter < step4 && cycleCounter >= step4) {
                 QuarterFrame();
                 HalfFrame();
             }
-            if (oldCounter < 37282 && cycleCounter >= 37282) {
+            if (oldCounter < step5 && cycleCounter >= step5) {
                 QuarterFrame();
                 HalfFrame();
-                cycleCounter -= 37282;
+                cycleCounter -= step5;
             }
         }
     }

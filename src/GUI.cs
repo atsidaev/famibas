@@ -21,7 +21,7 @@ public class GUI {
         if (!Helper.raylibLog) Raylib.SetTraceLogLevel(TraceLogLevel.None);
         
         Raylib.InitWindow(256 * Helper.scale, 240 * Helper.scale, "NES");
-        Raylib.SetTargetFPS(60);
+        Raylib.SetTargetFPS(Helper.timing.TargetFps);
 
         rlImGui.Setup(true);
 

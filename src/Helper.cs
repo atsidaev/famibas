@@ -1,6 +1,8 @@
 public class Helper {
     public static int scale = 2;
     public static string romPath = "";
+    public static TimingMode timingMode = TimingMode.NTSC;
+    public static Timing timing = Timing.NTSC;
     public static bool debug = false;
     public static bool debugs0h = false;
     public static bool fpsEnable = false;
@@ -59,6 +61,18 @@ public class Helper {
                 if (args[i] == "-d" || args[i] == "--debug") {
                     debug = true;
                     Console.WriteLine("Press [SPACE] to toggle Sprite0 Hit Check");
+                }
+                if (args[i] == "--ntsc") {
+                    timingMode = TimingMode.NTSC;
+                    timing = Timing.NTSC;
+                }
+                if (args[i] == "--pal") {
+                    timingMode = TimingMode.PAL;
+                    timing = Timing.PAL;
+                }
+                if (args[i] == "--dendy") {
+                    timingMode = TimingMode.Dendy;
+                    timing = Timing.Dendy;
                 }
                 if (args[i] == "-v" || args[i] == "--version") {
                     Console.WriteLine(version);

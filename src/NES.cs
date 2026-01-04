@@ -4,22 +4,25 @@ public class NES : IDisposable {
     Cartridge cartridge;
     Bus bus;
     private PcmPlayer? audioPlayer;
+    private Timing timing;
 
     public NES() {
+        timing = Helper.timing;
+
         cartridge = new Cartridge(Helper.romPath);
-        bus = new Bus(cartridge);
+        bus = new Bus(cartridge, timing);
 
         bus.cpu.Reset();
-        
+
         // Initialize audio player
         try {
-            audioPlayer = new PcmPlayer(44100, 1, 16); // 44.1kHz, mono, 16-bit
+            audioPlayer = new PcmPlayer(timing.AudioSampleRate, 1, 16);
         } catch (Exception ex) {
             Console.WriteLine($"Failed to initialize audio: {ex.Message}");
             audioPlayer = null;
         }
-        
-        Console.WriteLine("NES");
+
+        Console.WriteLine($"NES ({Helper.timingMode})");
     }
 
     public void Run() {
@@ -27,15 +30,15 @@ public class NES : IDisposable {
 
         bus.input.UpdateController();
 
-        while (cycles < 29828) {
+        while (cycles < timing.CpuCyclesPerFrame) {
             int used = bus.cpu.ExecuteInstruction();
             cycles += used;
-            bus.ppu.Step(used * 3);
+            bus.ppu.Step(used * timing.PpuCyclesPerCpuCycle);
             bus.apu.Step(used);
         }
 
         bus.ppu.DrawFrame(Helper.scale);
-        
+
         // Play audio samples
         if (audioPlayer != null) {
             byte[] audioSamples = bus.apu.GetAudioSamples();
@@ -44,7 +47,7 @@ public class NES : IDisposable {
             }
         }
     }
-    
+
     public void Dispose() {
         audioPlayer?.Dispose();
     }
