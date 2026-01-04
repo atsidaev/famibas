@@ -423,44 +423,45 @@ public class APU {
             sampleBuffer.Add(sample);
         }
 
-        // Frame counter
+        // Frame counter - thresholds in CPU cycles (APU cycles * 2)
+        // APU runs at CPU/2, original thresholds were in APU cycles
         int oldCounter = cycleCounter - cycles;
 
         if (!frameCounterMode) {
-            // 4-step mode
-            if (oldCounter < 3729 && cycleCounter >= 3729) {
+            // 4-step mode (CPU cycles: 7458, 14914, 22372, 29830)
+            if (oldCounter < 7458 && cycleCounter >= 7458) {
                 QuarterFrame();
             }
-            if (oldCounter < 7457 && cycleCounter >= 7457) {
+            if (oldCounter < 14914 && cycleCounter >= 14914) {
                 QuarterFrame();
             }
-            if (oldCounter < 11186 && cycleCounter >= 11186) {
+            if (oldCounter < 22372 && cycleCounter >= 22372) {
                 QuarterFrame();
             }
-            if (oldCounter < 14915 && cycleCounter >= 14915) {
+            if (oldCounter < 29830 && cycleCounter >= 29830) {
                 QuarterFrame();
                 HalfFrame();
-                cycleCounter -= 14915;
+                cycleCounter -= 29830;
             }
         } else {
-            // 5-step mode
-            if (oldCounter < 3729 && cycleCounter >= 3729) {
+            // 5-step mode (CPU cycles: 7458, 14914, 22372, 29830, 37282)
+            if (oldCounter < 7458 && cycleCounter >= 7458) {
                 QuarterFrame();
             }
-            if (oldCounter < 7457 && cycleCounter >= 7457) {
+            if (oldCounter < 14914 && cycleCounter >= 14914) {
                 QuarterFrame();
             }
-            if (oldCounter < 11186 && cycleCounter >= 11186) {
+            if (oldCounter < 22372 && cycleCounter >= 22372) {
                 QuarterFrame();
             }
-            if (oldCounter < 14915 && cycleCounter >= 14915) {
+            if (oldCounter < 29830 && cycleCounter >= 29830) {
                 QuarterFrame();
                 HalfFrame();
             }
-            if (oldCounter < 18641 && cycleCounter >= 18641) {
+            if (oldCounter < 37282 && cycleCounter >= 37282) {
                 QuarterFrame();
                 HalfFrame();
-                cycleCounter -= 18641;
+                cycleCounter -= 37282;
             }
         }
     }
