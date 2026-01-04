@@ -94,7 +94,6 @@ public class APU {
     private bool frameCounterIRQInhibit;
 
     // Internal state
-    private int frameCounter;
     private int cycleCounter;
     private int apuCycleAccumulator; // For tracking APU half-cycles (pulse/noise tick every 2 CPU cycles)
 
@@ -219,7 +218,6 @@ public class APU {
         // Frame counter
         frameCounterMode = false;
         frameCounterIRQInhibit = false;
-        frameCounter = 0;
         cycleCounter = 0;
         cyclesAccumulated = 0;
         apuCycleAccumulator = 0;
@@ -392,7 +390,7 @@ public class APU {
                 if (frameCounterIRQInhibit) {
                     dmcIRQPending = false;
                 }
-                frameCounter = 0;
+                cycleCounter = 0;
                 if (frameCounterMode) {
                     QuarterFrame();
                     HalfFrame();
@@ -425,23 +423,19 @@ public class APU {
             sampleBuffer.Add(sample);
         }
 
-        // Frame counter
-        // The frame counter runs at 240Hz
-        // In 4-step mode: Q (3728.5), Q (7457), Q (11185.5), Q+H (14914), then IRQ (if enabled)
-        // In 5-step mode: Q (3728.5), Q (7457), Q (11185.5), Q+H (14914), Q+H (18641)
-        // We use integer approximations: 3729, 7457, 11186, 14915, 18641
-        frameCounter += cycles;
-        
+        // Frame counter runs at 240Hz (quarters) / 120Hz (halves)
+        // 4-step: Q, Q+H, Q, Q+H+IRQ  (at cycles 3729, 7457, 11186, 14915)
+        // 5-step: Q, Q+H, Q, Q+H, Q+H (at cycles 3729, 7457, 11186, 14915, 18641)
+        int oldCounter = cycleCounter - cycles; // cycleCounter was already incremented at start
+
         if (!frameCounterMode) {
             // 4-step mode
-            int oldCounter = cycleCounter;
-            cycleCounter += cycles;
-            
             if (oldCounter < 3729 && cycleCounter >= 3729) {
                 QuarterFrame();
             }
             if (oldCounter < 7457 && cycleCounter >= 7457) {
                 QuarterFrame();
+                HalfFrame();
             }
             if (oldCounter < 11186 && cycleCounter >= 11186) {
                 QuarterFrame();
@@ -449,21 +443,16 @@ public class APU {
             if (oldCounter < 14915 && cycleCounter >= 14915) {
                 QuarterFrame();
                 HalfFrame();
-                if (!frameCounterIRQInhibit) {
-                    // IRQ would be triggered here - could call bus.cpu.RequestIRQ(true) if needed
-                }
-                cycleCounter = 0; // Reset for next frame
+                cycleCounter -= 14915; // Reset for next frame
             }
         } else {
             // 5-step mode
-            int oldCounter = cycleCounter;
-            cycleCounter += cycles;
-            
             if (oldCounter < 3729 && cycleCounter >= 3729) {
                 QuarterFrame();
             }
             if (oldCounter < 7457 && cycleCounter >= 7457) {
                 QuarterFrame();
+                HalfFrame();
             }
             if (oldCounter < 11186 && cycleCounter >= 11186) {
                 QuarterFrame();
@@ -475,7 +464,7 @@ public class APU {
             if (oldCounter < 18641 && cycleCounter >= 18641) {
                 QuarterFrame();
                 HalfFrame();
-                cycleCounter = 0; // Reset for next frame
+                cycleCounter -= 18641; // Reset for next frame
             }
         }
     }
