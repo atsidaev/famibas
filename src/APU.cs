@@ -424,46 +424,43 @@ public class APU {
         }
 
         // Frame counter
-        // Note: Using half thresholds to match original timing behavior
         int oldCounter = cycleCounter - cycles;
 
         if (!frameCounterMode) {
             // 4-step mode
-            if (oldCounter < 1865 && cycleCounter >= 1865) {
-                QuarterFrame();
-            }
             if (oldCounter < 3729 && cycleCounter >= 3729) {
                 QuarterFrame();
-                HalfFrame();
             }
-            if (oldCounter < 5593 && cycleCounter >= 5593) {
+            if (oldCounter < 7457 && cycleCounter >= 7457) {
                 QuarterFrame();
             }
-            if (oldCounter < 7458 && cycleCounter >= 7458) {
+            if (oldCounter < 11186 && cycleCounter >= 11186) {
+                QuarterFrame();
+            }
+            if (oldCounter < 14915 && cycleCounter >= 14915) {
                 QuarterFrame();
                 HalfFrame();
-                cycleCounter -= 7458;
+                cycleCounter -= 14915;
             }
         } else {
             // 5-step mode
-            if (oldCounter < 1865 && cycleCounter >= 1865) {
-                QuarterFrame();
-            }
             if (oldCounter < 3729 && cycleCounter >= 3729) {
                 QuarterFrame();
-                HalfFrame();
             }
-            if (oldCounter < 5593 && cycleCounter >= 5593) {
+            if (oldCounter < 7457 && cycleCounter >= 7457) {
                 QuarterFrame();
             }
-            if (oldCounter < 7458 && cycleCounter >= 7458) {
+            if (oldCounter < 11186 && cycleCounter >= 11186) {
+                QuarterFrame();
+            }
+            if (oldCounter < 14915 && cycleCounter >= 14915) {
                 QuarterFrame();
                 HalfFrame();
             }
-            if (oldCounter < 9321 && cycleCounter >= 9321) {
+            if (oldCounter < 18641 && cycleCounter >= 18641) {
                 QuarterFrame();
                 HalfFrame();
-                cycleCounter -= 9321;
+                cycleCounter -= 18641;
             }
         }
     }
