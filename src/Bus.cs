@@ -1,6 +1,7 @@
 public class Bus : IBus{
     public CPU cpu;
     public PPU ppu;
+    public APU apu;
     public Cartridge cartridge;
 
     public byte[] ram; //2KB RAM
@@ -11,6 +12,7 @@ public class Bus : IBus{
         this.cartridge = cartridge;
         cpu = new CPU(this);
         ppu = new PPU(this);
+        apu = new APU(this);
 
         ram = new byte[2048];
 
@@ -23,6 +25,10 @@ public class Bus : IBus{
         }
         else if (address == 0x4017) {
             return input.Read4017(); //NES controller input
+        }
+        
+        if (address >= 0x4000 && address <= 0x4017) {
+            return apu.Read(address);
         }
         
         if (address >= 0x2000 && address <= 0x3FFF) {
@@ -46,6 +52,11 @@ public class Bus : IBus{
 
         if (address == 0x4014) {
             ppu.WriteOAMDMA(value);
+            return;
+        }
+
+        if (address >= 0x4000 && address <= 0x4017) {
+            apu.Write(address, value);
             return;
         }
 

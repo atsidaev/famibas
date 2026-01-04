@@ -20,6 +20,7 @@ public class NES {
             int used = bus.cpu.ExecuteInstruction();
             cycles += used;
             bus.ppu.Step(used * 3);
+            bus.apu.Step(used);
         }
 
         bus.ppu.DrawFrame(Helper.scale);
