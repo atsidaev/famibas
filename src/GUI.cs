@@ -5,7 +5,7 @@ using rlImGui_cs;
 using ImGuiNET;
 
 public class GUI {
-    private NES nes;
+    private NES? nes;
 
     private FileDialog fileDialog;
     private string selectedFilePath = "";
@@ -59,6 +59,7 @@ public class GUI {
             if (Helper.romPath.Length != 0 && Helper.insertingRom == false) {
                 nes.Run();
             } else if (Helper.insertingRom == true) {
+                nes?.Dispose();
                 nes = new NES();
                 Helper.insertingRom = false;
             } else {
@@ -72,6 +73,7 @@ public class GUI {
             Raylib.EndDrawing();
         }
 
+        nes?.Dispose();
         Raylib.CloseWindow();
     }
 

@@ -102,6 +102,10 @@ public class APU {
     private const int CpuFrequency = 1789773; // NES CPU frequency
     private int cyclesPerSample;
     private int sampleCounter;
+    private int cyclesAccumulated;
+    
+    // Sample buffer for frame rendering
+    private List<float> sampleBuffer;
 
     public APU(Bus bus) {
         this.bus = bus;
@@ -111,6 +115,8 @@ public class APU {
 
         cyclesPerSample = CpuFrequency / SampleRate;
         sampleCounter = 0;
+        cyclesAccumulated = 0;
+        sampleBuffer = new List<float>();
 
         Console.WriteLine("APU init");
     }
@@ -209,6 +215,8 @@ public class APU {
         frameCounterIRQInhibit = false;
         frameCounter = 0;
         cycleCounter = 0;
+        cyclesAccumulated = 0;
+        sampleBuffer?.Clear();
     }
 
     public byte Read(ushort address) {
@@ -386,6 +394,7 @@ public class APU {
 
     public void Step(int cycles) {
         cycleCounter += cycles;
+        cyclesAccumulated += cycles;
 
         // Step channels
         StepPulse1(cycles);
@@ -393,6 +402,13 @@ public class APU {
         StepTriangle(cycles);
         StepNoise(cycles);
         StepDMC(cycles);
+        
+        // Generate audio samples
+        while (cyclesAccumulated >= cyclesPerSample) {
+            cyclesAccumulated -= cyclesPerSample;
+            float sample = GetSample();
+            sampleBuffer.Add(sample);
+        }
 
         // Frame counter
         // The frame counter runs at 240Hz
@@ -751,4 +767,27 @@ public class APU {
     private static readonly int[] DMCPeriodTable = new int[] {
         428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54
     };
+    
+    public byte[] GetAudioSamples() {
+        if (sampleBuffer.Count == 0) {
+            return Array.Empty<byte>();
+        }
+        
+        // Convert float samples (0.0 to 1.0) to 16-bit signed PCM
+        // Center the signal by subtracting 0.5 and scaling to -1.0 to 1.0 range
+        byte[] pcm = new byte[sampleBuffer.Count * 2];
+        for (int i = 0; i < sampleBuffer.Count; i++) {
+            // Clamp to 0-1 range, center around 0, then convert to signed 16-bit
+            float sample = Math.Max(0.0f, Math.Min(1.0f, sampleBuffer[i]));
+            float centered = (sample - 0.5f) * 2.0f; // Convert 0-1 to -1 to 1
+            short sample16 = (short)(centered * 32767.0f);
+            
+            // Little-endian byte order
+            pcm[i * 2] = (byte)(sample16 & 0xFF);
+            pcm[i * 2 + 1] = (byte)((sample16 >> 8) & 0xFF);
+        }
+        
+        sampleBuffer.Clear();
+        return pcm;
+    }
 }

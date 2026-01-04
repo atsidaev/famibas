@@ -1,8 +1,8 @@
-﻿namespace NET_NES;
+namespace NET_NES;
 
 using NAudio.Wave;
 
-class PcmPlayer : IDisposable
+public class PcmPlayer : IDisposable
 {
     private readonly WaveOutEvent output;
     private readonly BufferedWaveProvider buffer;
