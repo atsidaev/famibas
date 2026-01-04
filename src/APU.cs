@@ -702,9 +702,9 @@ public class APU {
         float noiseOutput = GetNoiseOutput();
         float dmcOutput = GetDMCOutput();
 
-        // Mix channels using NES-style mixing ratios
-        float output = pulse1Output * 0.20f + pulse2Output * 0.20f +
-                      triangleOutput * 0.20f + noiseOutput * 0.15f +
+        // Mix channels - triangle is quieter as it has no volume control
+        float output = pulse1Output * 0.25f + pulse2Output * 0.25f +
+                      triangleOutput * 0.10f + noiseOutput * 0.15f +
                       dmcOutput * 0.10f;
 
         return output;
