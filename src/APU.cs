@@ -108,6 +108,11 @@ public class APU {
     // Sample buffer for frame rendering
     private List<float> sampleBuffer;
 
+    // High-pass filter state for DC removal
+    private float prevInput = 0;
+    private float prevOutput = 0;
+    private const float HighPassAlpha = 0.995f; // Cutoff ~10Hz at 44100Hz
+
     public APU(Bus bus) {
         this.bus = bus;
 
@@ -219,6 +224,8 @@ public class APU {
         cyclesAccumulated = 0;
         apuCycleAccumulator = 0;
         sampleBuffer?.Clear();
+        prevInput = 0;
+        prevOutput = 0;
     }
 
     public byte Read(ushort address) {
@@ -780,21 +787,25 @@ public class APU {
         if (sampleBuffer.Count == 0) {
             return Array.Empty<byte>();
         }
-        
-        // Convert float samples (0.0 to 1.0) to 16-bit signed PCM
-        // Center the signal by subtracting 0.5 and scaling to -1.0 to 1.0 range
+
         byte[] pcm = new byte[sampleBuffer.Count * 2];
         for (int i = 0; i < sampleBuffer.Count; i++) {
-            // Clamp to 0-1 range, center around 0, then convert to signed 16-bit
-            float sample = Math.Max(0.0f, Math.Min(1.0f, sampleBuffer[i]));
-            float centered = (sample - 0.5f) * 2.0f; // Convert 0-1 to -1 to 1
-            short sample16 = (short)(centered * 32767.0f);
-            
+            float input = sampleBuffer[i];
+
+            // Apply high-pass filter to remove DC offset
+            float output = HighPassAlpha * (prevOutput + input - prevInput);
+            prevInput = input;
+            prevOutput = output;
+
+            // Clamp and convert to 16-bit signed PCM
+            output = Math.Max(-1.0f, Math.Min(1.0f, output));
+            short sample16 = (short)(output * 32000.0f);
+
             // Little-endian byte order
             pcm[i * 2] = (byte)(sample16 & 0xFF);
             pcm[i * 2 + 1] = (byte)((sample16 >> 8) & 0xFF);
         }
-        
+
         sampleBuffer.Clear();
         return pcm;
     }
