@@ -15,10 +15,14 @@ public class PcmPlayer : IDisposable
         var format = new WaveFormat(sampleRate, bitsPerSample, channels);
         buffer = new BufferedWaveProvider(format)
         {
+            BufferDuration = TimeSpan.FromMilliseconds(100), // Reduce latency
             DiscardOnBufferOverflow = true
         };
 
-        output = new WaveOutEvent();
+        output = new WaveOutEvent
+        {
+            DesiredLatency = 50 // Low latency playback
+        };
         output.Init(buffer);
         output.Play();
     }

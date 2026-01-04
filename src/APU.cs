@@ -96,6 +96,7 @@ public class APU {
     // Internal state
     private int frameCounter;
     private int cycleCounter;
+    private int apuCycleAccumulator; // For tracking APU half-cycles (pulse/noise tick every 2 CPU cycles)
 
     // Audio output
     private const int SampleRate = 44100;
@@ -216,6 +217,7 @@ public class APU {
         frameCounter = 0;
         cycleCounter = 0;
         cyclesAccumulated = 0;
+        apuCycleAccumulator = 0;
         sampleBuffer?.Clear();
     }
 
@@ -396,11 +398,17 @@ public class APU {
         cycleCounter += cycles;
         cyclesAccumulated += cycles;
 
+        // Pulse and noise channels tick at APU frequency (CPU/2)
+        // Triangle ticks at CPU frequency
+        apuCycleAccumulator += cycles;
+        int apuCycles = apuCycleAccumulator / 2;
+        apuCycleAccumulator %= 2;
+
         // Step channels
-        StepPulse1(cycles);
-        StepPulse2(cycles);
-        StepTriangle(cycles);
-        StepNoise(cycles);
+        StepPulse1(apuCycles);
+        StepPulse2(apuCycles);
+        StepTriangle(cycles); // Triangle runs at CPU speed
+        StepNoise(apuCycles);
         StepDMC(cycles);
         
         // Generate audio samples
@@ -701,10 +709,10 @@ public class APU {
         float noiseOutput = GetNoiseOutput();
         float dmcOutput = GetDMCOutput();
 
-        // Mix channels (simplified mixing)
-        float output = pulse1Output * 0.15f + pulse2Output * 0.15f + 
-                      triangleOutput * 0.5f + noiseOutput * 0.19f + 
-                      dmcOutput * 0.11f;
+        // Mix channels using NES-style mixing ratios
+        float output = pulse1Output * 0.20f + pulse2Output * 0.20f +
+                      triangleOutput * 0.20f + noiseOutput * 0.15f +
+                      dmcOutput * 0.10f;
 
         return output;
     }
